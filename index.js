@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
+const similarityRoutes = require('./routes/similarityRoutes');
 const morgan = require('morgan');
 const logger = require('./utils/logger');
 
@@ -10,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes)
+app.use('/api/similarity', similarityRoutes);
 
 // Morgan loglarını da Winston’a yönlendirdik.
 app.use(morgan('combined', {
