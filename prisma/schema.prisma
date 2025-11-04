@@ -22,4 +22,17 @@ model User {
   role        String // "seeker" veya "employer"
   companyName String?
   createdAt   DateTime @default(now())
+  cv          UserCv?  @relation("UserToUserCv")
+}
+
+model UserCv {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @unique @db.ObjectId
+  filePath     String // uploads/cv/<userId>.pdf (disk yolu)
+  originalName String
+  mimeType     String
+  size         Int
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  user         User     @relation("UserToUserCv", fields: [userId], references: [id])
 }
