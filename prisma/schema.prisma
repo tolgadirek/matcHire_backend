@@ -22,17 +22,29 @@ model User {
   role        String // "seeker" veya "employer"
   companyName String?
   createdAt   DateTime @default(now())
-  cv          UserCv?  @relation("UserToUserCv")
+  jobs        Job[]   @relation("UserToJobs")
 }
 
 model UserCv {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @unique @db.ObjectId
-  filePath     String // uploads/cv/<userId>.pdf (disk yolu)
+  filePath     String // uploads/cv/<userId>/<jobId>/<cvName>.pdf (disk yolu)
   originalName String
   mimeType     String
   size         Int
+  job          Job      @relation("JobToUserCvs", fields: [jobId], references: [id])
+  jobId        String   @db.ObjectId
   updatedAt    DateTime @updatedAt
   createdAt    DateTime @default(now())
-  user         User     @relation("UserToUserCv", fields: [userId], references: [id])
+  similarity   Float?
+}
+
+model Job{
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  CVs         UserCv[] @relation("JobToUserCvs")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @db.ObjectId
+  user        User     @relation("UserToJobs", fields: [userId], references: [id])
 }

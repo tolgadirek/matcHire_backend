@@ -35,6 +35,8 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Yeni kullanıcı oluşturma
+    // Do not pass `jobs` directly — Prisma expects nested create/connect input for relations.
+    // We don't need to create jobs when registering a user, so omit the field entirely.
     const newUser = await prisma.user.create({
       data: {
         firstName,
@@ -129,7 +131,8 @@ const getProfile = async (req, res) => {
         role: true,
         companyName: true,
         createdAt: true,
-        cv: { select: { filePath: true, originalName: true, updatedAt: true } }
+        cv: { select: { filePath: true, originalName: true, updatedAt: true } },
+        jobs: { select: { id: true, title: true, description: true, createdAt: true } }
       }
     });
 

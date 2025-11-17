@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { log } = require("console");
 
 // Kayıtların tutulacağı klasör yolu
 const uploadDir = path.join(__dirname, "..", "uploads", "cv");
@@ -13,13 +14,27 @@ if (!fs.existsSync(uploadDir)) {
 // Multer depolama ayarları
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    //create an folder for each user if not exists
+    
+    const userId = req.user?.id || "unknown";
+    const userDir = path.join(uploadDir, userId);
+    console.log("JobId:", req.body.jobId);
+    console.log("req.body:", req.body);
+    
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir, { recursive: true });
+    }
+    //also create an folder for job description under the user folder
+    const jobDescDir = path.join(userDir, req.body.jobId || "general");
+
+    if (!fs.existsSync(jobDescDir)) {
+      fs.mkdirSync(jobDescDir, { recursive: true });
+    }
+    cb(null, jobDescDir);
   },
   filename: function (req, file, cb) {
-    // Her kullanıcı için dosya ismi userId.pdf şeklinde
-    const userId = req.user?.id || "unknown";
-    const ext = path.extname(file.originalname).toLowerCase() || ".pdf";
-    cb(null, `${userId}${ext}`);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
 
