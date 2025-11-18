@@ -11,7 +11,7 @@ router.post("/upload", auth, upload.single("cvFile"), upsertMyCv);
 router.get("/meta", auth, getMyCvMeta);
 
 // CV dosyasını getirme (görüntüleme veya indirme)
-router.get("/download", donwloadCvById);
+router.get("/download", auth, donwloadCvById);
 
 // CV silme
 router.delete("/delete", auth, deleteMyCv);

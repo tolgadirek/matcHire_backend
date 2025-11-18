@@ -51,18 +51,22 @@ const getMyCvMeta = async (req, res) => {
 // “Kullanıcının mevcut CV’sini anasayfada göster / indir” işlemini yapar.
 const donwloadCvById = async (req, res) => {
   const userId = req.user.id;
-  const cvId = req.params.cvId;
+  const cvId = req.query.cvId;  // ← DÜZELTME
+
   try {
-    const cv = await prisma.userCv.findUnique({ where: { id: cvId, userId } });
+    const cv = await prisma.userCv.findUnique({
+      where: { id: cvId },
+    });
+
     if (!cv) return res.status(404).json({ message: "No CV found." });
-    const absPath = path.join(__dirname, "..", cv.filePath);
-    if (!fs.existsSync(absPath)) return res.status(404).json({ message: "File missing on server." });
+
+    const absPath = path.join(process.cwd(), cv.filePath);
 
     res.setHeader("Content-Type", cv.mimeType || "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${cv.originalName || "cv.pdf"}"`);
+    res.setHeader("Content-Disposition", `inline; filename="${cv.originalName}"`);
+
     fs.createReadStream(absPath).pipe(res);
   } catch (e) {
-    logger.error(`Download CV by ID error: ${e.message}`);
     return res.status(500).json({ message: e.message });
   }
 };

@@ -46,15 +46,21 @@ const getAllJobsUser = async (req, res) => {
 };
 
 const deleteJob = async (req, res) => {
-    const { jobId } = req.params;
-    try {
+  const { jobId } = req.params;
+  try {
+    // 1) Önce job'a bağlı tüm CV'leri sil
+    await prisma.userCv.deleteMany({
+      where: { jobId },
+    });
+
+    // 2) Sonra job'u sil
     await prisma.job.delete({
       where: { id: jobId },
     });
-    logger.info(`Job deleted with ID: ${jobId}`);
-    return res.json({ message: "Job deleted successfully." });
+
+    return res.json({ message: "Job and related CVs deleted successfully." });
+
   } catch (e) {
-    logger.error(`Job deletion error: ${e.message}`);
     return res.status(500).json({ message: e.message });
   }
 };
