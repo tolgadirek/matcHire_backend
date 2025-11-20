@@ -120,25 +120,21 @@ const getProfile = async (req, res) => {
 
   logger.info(`Get profile for user Id: ${userId}`);
 
-  try{
+  try {
     const existingUser = await prisma.user.findUnique({
-      where: {id: userId},
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        role: true,
-        companyName: true,
-        createdAt: true,
-        cv: { select: { filePath: true, originalName: true, updatedAt: true } },
-        jobs: { select: { id: true, title: true, description: true, createdAt: true } }
-      }
+      where: { id: userId },
+      include: {
+        jobs: {
+            include: {
+                CVs: true
+            }
+        }
+      } 
     });
 
     if (!existingUser) {
       logger.warn(`User not found in profile fetch: ${userId}`);
-      return res.status(404).json({message: "User not found"});
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (existingUser.role !== "employer") {
@@ -151,8 +147,8 @@ const getProfile = async (req, res) => {
     });
 
   } catch (e) {
-      logger.error(`Get profile error: ${e.message}`);
-      return res.status(500).json({ message: e.message });
+    logger.error(`Get profile error: ${e.message}`);
+    return res.status(500).json({ message: e.message });
   }
 }
 

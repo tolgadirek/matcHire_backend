@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const {
   createJob,
-  getAllJobs,
   deleteJob,
   getAllJobsUser
 } = require("../controllers/jobController");

@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const similarityRoutes = require('./routes/similarityRoutes');
 const cvRoutes = require("./routes/cvRoutes");
 const jobRoutes = require("./routes/jobRoutes");
+const keywords = require("./routes/keywordsRoutes");
 const morgan = require('morgan');
 const logger = require('./utils/logger');
 
@@ -16,6 +17,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/similarity', similarityRoutes);
 app.use("/api/cv", cvRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/keywords", keywords);
 
 // Morgan loglarını da Winston’a yönlendirdik.
 app.use(morgan('combined', {

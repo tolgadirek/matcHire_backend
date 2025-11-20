@@ -22,7 +22,7 @@ model User {
   role        String // "seeker" veya "employer"
   companyName String?
   createdAt   DateTime @default(now())
-  jobs        Job[]   @relation("UserToJobs")
+  jobs        Job[]    @relation("UserToJobs")
 }
 
 model UserCv {
@@ -38,13 +38,14 @@ model UserCv {
   similarity   Float?
 }
 
-model Job{
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  CVs         UserCv[] @relation("JobToUserCvs")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String   @db.ObjectId
-  user        User     @relation("UserToJobs", fields: [userId], references: [id])
+model Job {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  CVs             UserCv[] @relation("JobToUserCvs")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String   @db.ObjectId
+  user            User     @relation("UserToJobs", fields: [userId], references: [id])
+  missingKeywords String[]
 }
