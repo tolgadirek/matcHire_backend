@@ -47,7 +47,7 @@ async function getMissingKeywords(req, res) {
       job_text: req.body.jobText
     });
 
-    const missingKeywords = response.data.missing_keywords || [];
+    const missingKeywords = response.data.recommendations || [];
 
     // DB'ye kaydet
     await prisma.job.update({
