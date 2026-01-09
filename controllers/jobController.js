@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const logger = require("../utils/logger");
-const path = require("path");
 
 //Create a job in the database
 const createJob = async (req, res) => {

@@ -1,4 +1,3 @@
-// controllers/cvController.js
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const logger = require("../utils/logger");
@@ -10,22 +9,27 @@ const upsertMyCv = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded." });
 
-    const filePath = path.join("uploads", "cv",  req.user.id, req.body.jobId, req.file.filename);
+    // --- TÜRKÇE KARAKTER DÜZELTMESİ ---
+    // Multer ismi bozuk (latin1) getirebilir, bunu UTF-8'e çeviriyoruz.
+    const fixedOriginalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+
+    const filePath = path.join("uploads", "cv", req.user.id, req.body.jobId, req.file.filename);
+    
     const data = {
       filePath,
       jobId: req.body.jobId,
-      originalName: req.file.originalname,
+      originalName: fixedOriginalName,
       mimeType: req.file.mimetype,
       size: req.file.size,
     };
    
-    console.log("c")
     const created = await prisma.userCv.create({ data });
-    const updatedJob = await prisma.job.update({
+    
+    await prisma.job.update({
       where: { id: req.body.jobId },
-      data: {CVs: { connect: { id: created.id } }, updatedAt: new Date() },
+      data: { CVs: { connect: { id: created.id } }, updatedAt: new Date() },
     });
-    console.log(updatedJob)
+
     logger.info(`CV created for user ${req.user?.id} and job ${req.body.jobId}`);
     return res.status(201).json({ status: "Created", cv: created });
     
@@ -35,7 +39,6 @@ const upsertMyCv = async (req, res) => {
   }
 };
 
-// “Kullanıcının yüklediği CV var mı, varsa ne zaman yüklendi?” bilgisini verir.
 const getMyCvMeta = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -48,22 +51,18 @@ const getMyCvMeta = async (req, res) => {
   }
 };
 
-// “Kullanıcının mevcut CV’sini anasayfada göster / indir” işlemini yapar.
-const donwloadCvById = async (req, res) => {
-  const userId = req.user.id;
-  const cvId = req.query.cvId;  // ← DÜZELTME
+const downloadCvById = async (req, res) => {
+  const cvId = req.query.cvId;
 
   try {
-    const cv = await prisma.userCv.findUnique({
-      where: { id: cvId },
-    });
-
+    const cv = await prisma.userCv.findUnique({ where: { id: cvId } });
     if (!cv) return res.status(404).json({ message: "No CV found." });
 
     const absPath = path.join(process.cwd(), cv.filePath);
 
     res.setHeader("Content-Type", cv.mimeType || "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${cv.originalName}"`);
+    
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(cv.originalName)}"`);
 
     fs.createReadStream(absPath).pipe(res);
   } catch (e) {
@@ -71,9 +70,7 @@ const donwloadCvById = async (req, res) => {
   }
 };
 
-// CV silme fonksiyonu
 const deleteMyCv = async (req, res) => {
-  //cvId will be in url like : /api/cv/delete?cvId=${encodeURIComponent(cvId)
   const userId = req.user.id; 
   const cvId = req.query.cvId;
   try {
@@ -84,14 +81,12 @@ const deleteMyCv = async (req, res) => {
       return res.status(404).json({ message: "No CV found to delete." });
     }
 
-    // Dosyayı sil
     const absPath = path.join(__dirname, "..", cv.filePath);
     if (fs.existsSync(absPath)) {
       fs.unlinkSync(absPath);
       logger.info(`CV file deleted from disk: ${absPath}`);
     }
 
-    // Veritabanı kaydını sil
     await prisma.userCv.delete({ where: { id: cvId } });
     logger.info(`CV record deleted for user ${userId}`);
 
@@ -117,16 +112,6 @@ const getCvForJob = async (req, res) => {
   } 
 };
 
-const setSimilarityForCv = async (cvId, similarity) => {
-  try {
-    await prisma.userCv.update({
-      where: { id: cvId },
-      data: { similarity },
-    });
-    logger.info(`Similarity ${similarity} set for CV ID: ${cvId}`);
-  } catch (e) {
-    logger.error(`Set similarity error for CV ID ${cvId}: ${e.message}`);
-  }
-};
+// setSimilarityForCv silindi, similarityController bu işi yapıyor.
   
-module.exports = { upsertMyCv, getMyCvMeta, donwloadCvById, deleteMyCv, getCvForJob, setSimilarityForCv };
+module.exports = { upsertMyCv, getMyCvMeta, downloadCvById, deleteMyCv, getCvForJob };

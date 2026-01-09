@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const path = require("path");  // ← EKLENDİ
+const path = require("path");
 const fs = require("fs");
 
 async function calculateSimilarity(req, res) {
@@ -13,15 +13,9 @@ async function calculateSimilarity(req, res) {
       select: { filePath: true },
     });
 
-    if (!cv) {
-      return res.status(404).json({ success: false, message: 'CV not found' });
-    }
+    if (!cv) return res.status(404).json({ success: false, message: 'CV not found' });
 
-    // ABSOLUTE PATH (en güvenilir yöntem)
     const absCvPath = path.resolve(process.cwd(), cv.filePath);
-
-    console.log("ABS PATH:", absCvPath);
-    console.log("EXISTS:", fs.existsSync(absCvPath));
 
     if (!fs.existsSync(absCvPath)) {
       return res.status(500).json({ success: false, message: "PDF file not found on server" });
